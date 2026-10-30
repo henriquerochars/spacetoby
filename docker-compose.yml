@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: spacetoby-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-spacetoby}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - spacetoby_pgdata:/var/lib/postgresql/data
+      - ./apps/api/prisma/migrations/20261029000000_init/migration.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spacetoby"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: spacetoby-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/spacetoby?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@postgres:5432/spacetoby?schema=public
+      SUPABASE_URL: ${SUPABASE_URL:-http://localhost:54321}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-spacetoby-super-secret-jwt-token-with-at-least-32-chars}
+    ports:
+      - "3000:3000"
+
+volumes:
+  spacetoby_pgdata:

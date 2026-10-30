@@ -1,0 +1,131 @@
+[
+  {
+    "id": "toby_portrait_cursing",
+    "path": "res://assets/characters/toby_portrait_cursing.png",
+    "tool": "create_image_pixflux",
+    "job_id": "524ba609-560e-4e39-a09a-1a2f9263fd94",
+    "status": "completed"
+  },
+  {
+    "id": "toby_portrait_surprised",
+    "path": "res://assets/characters/toby_portrait_surprised.png",
+    "tool": "create_image_pixflux",
+    "job_id": "48d47bc9-daaa-48d2-a3bd-98f6640d25bb",
+    "status": "completed"
+  },
+  {
+    "id": "toby_portrait_happy",
+    "path": "res://assets/characters/toby_portrait_happy.png",
+    "tool": "create_image_pixflux",
+    "job_id": "ae429c6d-2d8e-41c4-a6ff-4bbfcc350a87",
+    "status": "completed"
+  },
+  {
+    "id": "toby_portrait_determined",
+    "path": "res://assets/characters/toby_portrait_determined.png",
+    "tool": "create_image_pixflux",
+    "job_id": "8bb88010-7e45-459d-800b-37252c4088b7",
+    "status": "completed"
+  },
+  {
+    "id": "baron_vex_portrait",
+    "path": "res://assets/characters/baron_vex_portrait.png",
+    "tool": "create_image_pixflux",
+    "job_id": "06d09ce4-ced2-4c80-81af-95f7eb4dcf22",
+    "status": "completed"
+  },
+  {
+    "id": "cutscene_heist_escape",
+    "path": "res://assets/ui/cutscene_heist_escape.png",
+    "tool": "create_image_pixflux",
+    "job_id": "9adaab40-98a7-4d52-b16e-5fb51fb74460",
+    "status": "completed"
+  },
+  {
+    "id": "player_ship_thrust",
+    "path": "res://assets/spaceships/player_ship_thrust.png",
+    "tool": "create_image_pixflux",
+    "job_id": "301fc320-a005-437d-82c5-b38d165471e5",
+    "status": "completed"
+  },
+  {
+    "id": "enemy_scout",
+    "path": "res://assets/enemies/enemy_scout.png",
+    "tool": "create_image_pixflux",
+    "status": "cached"
+  },
+  {
+    "id": "toby_portrait_gameover",
+    "path": "res://assets/characters/toby_portrait_gameover.png",
+    "tool": "create_image_pixflux",
+    "job_id": "4c1f6276-cb68-4752-ae7b-9f8a931cdc49",
+    "status": "completed"
+  },
+  {
+    "id": "player_ship_idle",
+    "path": "res://assets/spaceships/player_ship_idle.png",
+    "tool": "create_image_pixflux",
+    "job_id": "67cd9478-567f-4dbe-988e-59a4055160b6",
+    "status": "completed"
+  },
+  {
+    "id": "enemy_fighter",
+    "path": "res://assets/enemies/enemy_fighter.png",
+    "tool": "create_image_pixflux",
+    "job_id": "cc636e71-1ed5-4c1b-bf09-910bb77b20b2",
+    "status": "completed"
+  },
+  {
+    "id": "obstacle_station_pillar",
+    "path": "res://assets/enemies/obstacle_station_pillar.png",
+    "tool": "create_image_pixflux",
+    "status": "cached"
+  },
+  {
+    "id": "enemy_heavy",
+    "path": "res://assets/enemies/enemy_heavy.png",
+    "tool": "create_image_pixflux",
+    "job_id": "0f14ee3f-cc36-43a9-ab29-1591a95b3371",
+    "status": "completed"
+  },
+  {
+    "id": "obstacle_asteroid_large",
+    "path": "res://assets/enemies/obstacle_asteroid_large.png",
+    "tool": "create_image_pixflux",
+    "job_id": "6f1fe368-2386-41b4-8b21-131db393fade",
+    "status": "completed"
+  },
+  {
+    "id": "bg_planet",
+    "path": "res://assets/backgrounds/bg_planet.png",
+    "tool": "create_image_pixflux",
+    "job_id": "e7237217-4661-49b5-81aa-bc1e41316bec",
+    "status": "completed"
+  },
+  {
+    "id": "explosion_burst",
+    "path": "res://assets/effects/explosion_burst.png",
+    "tool": "create_image_pixflux",
+    "status": "cached"
+  },
+  {
+    "id": "spacetoby_logo",
+    "path": "res://assets/ui/spacetoby_logo.png",
+    "tool": "create_image_pixflux",
+    "status": "cached"
+  },
+  {
+    "id": "laser_player",
+    "path": "res://assets/effects/laser_player.png",
+    "tool": "create_image_pixflux",
+    "job_id": "5e3e13b1-8692-43fd-979f-0c2b1884829c",
+    "status": "completed"
+  },
+  {
+    "id": "laser_enemy",
+    "path": "res://assets/effects/laser_enemy.png",
+    "tool": "create_image_pixflux",
+    "job_id": "5df29ed2-800f-44b1-9c93-c759719224c8",
+    "status": "completed"
+  }
+]

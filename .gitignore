@@ -1,0 +1,24 @@
+# Node / pnpm
+node_modules/
+dist/
+.pnpm-store/
+*.log
+
+# Environment secrets (NEVER commit real secrets)
+.env
+.env.local
+.env.*
+!.env.example
+apps/api/.env
+
+# Godot 4
+apps/game/.godot/
+apps/game/build/
+*.import
+*.tmp
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+coverage/

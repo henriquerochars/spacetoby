@@ -1,0 +1,62 @@
+name: SpaceToby CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-and-contracts:
+    name: NestJS API & Contracts — Lint, Build, Unit & E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.2
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+
+      - name: Lint Workspace
+        run: pnpm lint
+
+      - name: Build Workspace
+        run: pnpm build
+
+      - name: Run Unit Tests
+        run: pnpm test
+        env:
+          SKIP_DB_CONNECT: "true"
+          NODE_ENV: "test"
+
+      - name: Run E2E Workflow Tests
+        run: pnpm test:e2e
+        env:
+          SKIP_DB_CONNECT: "true"
+          NODE_ENV: "test"
+
+  godot-validation:
+    name: Godot 4 Headless Import & Automated Gameplay Tests
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate Project Import & Run Headless Tests
+        run: ./scripts/test-game.sh

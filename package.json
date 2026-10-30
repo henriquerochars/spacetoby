@@ -1,0 +1,36 @@
+{
+  "name": "spacetoby",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SpaceToby — 2D Space Arcade Game Monorepo (Godot 4.x + NestJS + Prisma + PostgreSQL + Supabase)",
+  "scripts": {
+    "dev": "pnpm --filter @spacetoby/api start:dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @spacetoby/api test:e2e",
+    "test:game": "./scripts/test-game.sh",
+    "test:all": "pnpm test && pnpm test:e2e && pnpm test:game",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "db:generate": "pnpm --filter @spacetoby/api prisma:generate",
+    "db:migrate": "pnpm --filter @spacetoby/api prisma:migrate",
+    "db:push": "pnpm --filter @spacetoby/api prisma:push",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "game:open": "godot --path apps/game -e",
+    "game:run": "godot --path apps/game",
+    "game:export:web": "./scripts/export-web.sh"
+  },
+  "keywords": [
+    "godot",
+    "nestjs",
+    "prisma",
+    "postgresql",
+    "supabase",
+    "pixellab",
+    "arcade",
+    "spacetoby"
+  ],
+  "author": "SpaceToby Team",
+  "license": "MIT"
+}
