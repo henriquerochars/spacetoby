@@ -1,7 +1,7 @@
 # SpaceToby — Context Handoff for T3 Code
 
 > **Date**: 2026-10-30  
-> **Status**: Playable MVP implemented & tested; ready for hardening, authentic Supabase integration, native Godot web export, and final release polish.
+> **Status**: Playable MVP with local PostgreSQL email/password authentication, native Godot WebAssembly export, and animated effects. Backend and game validation pass; password recovery still needs a delivery mechanism.
 
 ---
 
@@ -9,8 +9,8 @@
 
 **SpaceToby** is a fast-paced 2D side-scrolling space arcade game featuring **Toby**, a charismatic anthropomorphic beagle space mercenary who escapes with the Quantum Crystal after pulling off a heist on crime syndicate boss Baron Vex.
 
-- **Game Client**: Godot Engine 4.7.2 (macOS binary at `/opt/homebrew/bin/godot`), GDScript, 1280x720 canvas_items viewport.
-- **Backend API**: NestJS 10, TypeScript, Prisma ORM 6.19, PostgreSQL, Supabase Auth (JWT/JWKS).
+- **Game Client**: Godot Engine 4.7.2, GDScript, 1280x720 canvas_items viewport.
+- **Backend API**: NestJS 10, TypeScript, Prisma ORM 6.19, PostgreSQL, local email/password authentication and signed app JWTs.
 - **Contracts**: Shared TypeScript DTOs & enums in `packages/api-contracts` (`@spacetoby/api-contracts`).
 - **Art & Audio**: 19 original pixel-art assets generated via PixelLab MCP (`https://api.pixellab.ai/mcp`) + procedural 16-bit PCM WAV audio effects and chiptune synth loops.
 - **Monorepo**: Managed via `pnpm` workspace (Node 22 / 26).
@@ -43,13 +43,13 @@ tobyspace/
 │   │
 │   └── api/                   # NestJS REST API
 │       ├── src/
-│       │   ├── auth/          # JWT/JWKS guards, token verification, auth controller
+│       │   ├── auth/          # Local password auth, JWT guards, and auth controller
 │       │   ├── players/       # Player profile, nickname update, statistics
 │       │   ├── game-sessions/ # Server-issued session IDs & anti-cheat checks
 │       │   ├── leaderboards/  # Global Kills & Distance rankings with deterministic tie-breaking
 │       │   ├── common/        # DataRepository (PostgreSQL + snapshot fallback), filters, interceptors
 │       │   └── prisma/        # PrismaService
-│       ├── prisma/            # schema.prisma, migrations (20261029000000_init) + RLS policies
+│       ├── prisma/            # schema.prisma and versioned PostgreSQL migrations
 │       └── test/              # Jest unit & E2E integration tests (app.e2e-spec.ts)
 │
 ├── packages/
@@ -62,7 +62,7 @@ tobyspace/
 ├── scripts/
 │   ├── generate_pixellab_assets.py  # PixelLab MCP client & asset pipeline
 │   ├── generate_audio_and_bgs.py    # Procedural audio & parallax generator
-│   ├── test-game.sh                 # Godot headless asset import & 64-test suite
+│   ├── test-game.sh                 # Godot headless asset import & 65-test suite
 │   ├── export-web.sh                # Web export builder
 │   └── build_web_bundle.py          # Web bundle generator
 ├── .github/workflows/ci.yml   # GitHub Actions CI workflow
@@ -96,7 +96,7 @@ tobyspace/
 
 3. **Backend API (`apps/api`) & Shared Contracts**:
    - `packages/api-contracts`: DTOs for Auth, Profile, GameSession, and Leaderboards.
-   - Supabase JWT/JWKS token verification guard + dev auth bridge.
+   - Local account authentication using scrypt password hashes and configured app JWT signing.
    - Anti-cheat plausibility validator: Prevents duplicate submissions, enforces session ownership, validates speed ratio (`<= 850 units/s`), kill rate (`<= 6 kills/s`), and score bounds.
    - Dual Leaderboards: Ranking A (Most Kills) and Ranking B (Longest Distance), deduplicating runs per player with deterministic tie-breaking (Score DESC -> AchievedAt ASC -> PlayerId ASC).
    - Dual-mode data persistence: Direct PostgreSQL via Prisma ORM + local JSON snapshot repository fallback when running offline.
@@ -105,36 +105,18 @@ tobyspace/
    - **TypeScript & Lint**: `pnpm lint` and `pnpm build` compile with zero errors across all workspaces.
    - **Backend Unit Tests**: 8/8 tests pass (`pnpm test`).
    - **Backend E2E Workflow**: 10-step full player lifecycle test passes (`pnpm test:e2e`).
-   - **Godot 4 Headless Test Suite**: All 64 assertions pass in headless mode (`./scripts/test-game.sh`).
+   - **Godot 4 Headless Test Suite**: All 65 assertions pass in headless mode (`./scripts/test-game.sh`).
 
 ---
 
-## 4. Pending Work & Technical Debt for T3 Code
+## 4. Release Status
 
-Here are the specific items to address to finalize the production MVP:
-
-### Priority 1: Supabase Authentication Real Verification
-- **Current State**: `AuthController` uses a deterministic HMAC/hash generator as a local development bridge.
-- **Task**: Connect to an authentic Supabase project instance (local Supabase CLI or cloud Supabase) so user passwords and signup/login go through Supabase Auth (`supabase.auth.signUp` / `supabase.auth.signInWithPassword`), validating access tokens via JWKS keys.
-
-### Priority 2: Real PostgreSQL via Docker
-- **Current State**: Docker daemon is now running (Docker version `28.5.1`, Supabase CLI `2.122.0`). Previous tests ran against the embedded in-memory/snapshot repository.
-- **Task**:
-  - Run `docker compose up -d postgres`.
-  - Execute `pnpm db:push` or `pnpm db:migrate`.
-  - Validate that Prisma writes directly to PostgreSQL database tables and reads from views `leaderboard_kills_view` and `leaderboard_distance_view`.
-
-### Priority 3: Native Godot Web Export (Wasm / HTML5)
-- **Current State**: `apps/game/build/web/index.pck` is exported from Godot 4.7.2, but `index.html` was generated via an HTML5 Canvas fallback bundle because Godot 4.7.2 export templates were missing or had template mismatch.
-- **Task**: Install/configure matching Godot 4.7.2 Web export templates in `~/Library/Application Support/Godot/export_templates/4.7.2.stable/` (or run export using standard Godot 4.3 templates if downgraded) to produce native Godot Wasm `index.html`.
-
-### Priority 4: Multi-frame Animations & Visual Polish
-- **Current State**: Single-frame/dual-frame sprites exist for player ship and enemies.
-- **Task**: Use PixelLab MCP (`animate_object` / `create_character_state`) to generate multi-frame sprite sheets for enemy engine trails, thruster flame cycles, and destruction explosion stages.
-
-### Priority 5: Git & Documentation
-- **Current State**: `docs/architecture` and `docs/assets` are documented; `docs/gameplay/` and `docs/api/` can be filled in with detailed tuning tables and OpenAPI specs.
-- **Task**: Run `git init`, create initial commit, and ensure GitHub Actions workflow `.github/workflows/ci.yml` matches Godot 4.7.2 runner.
+- **Authentication**: Local email/password accounts are stored in PostgreSQL with scrypt password hashes and signed application JWTs; no external identity provider is used. Password recovery returns HTTP 501 until an email delivery or operator reset mechanism is configured.
+- **PostgreSQL**: Docker Compose provides a local PostgreSQL service. Versioned migrations have been applied and a signup/login smoke test confirmed account persistence.
+- **Web export**: Godot 4.7.2 templates produce native `index.html`, `index.js`, `index.wasm`, and `index.pck`; the export script rejects fallback builds.
+- **Animations**: The player thruster has four animated silhouettes and ship destruction has an eight-frame locally drawn pixel effect.
+- **Git and CI**: The repository has an initial commit and public GitHub remote. CI installs Godot 4.7.2 and validates headless gameplay plus native WebAssembly export.
+- **Open item**: Configure a real password-recovery delivery/reset mechanism before exposing recovery as available.
 
 ---
 
@@ -150,7 +132,7 @@ pnpm lint
 # 2. Run Tests
 pnpm test          # Backend unit tests
 pnpm test:e2e      # Full 10-step E2E integration test
-./scripts/test-game.sh  # Godot 4 headless project import & 64-assertion test suite
+./scripts/test-game.sh  # Godot 4 headless project import & 65-assertion test suite
 
 # 3. Start Backend API
 pnpm dev           # Listens on http://localhost:3000 (Swagger: http://localhost:3000/api/docs)
@@ -161,11 +143,12 @@ godot --path apps/game   # Run client directly in Godot Engine
 
 ---
 
-## 6. Credentials & Configuration Reference
+## 6. Toolchain & Configuration Reference
 
 - **PixelLab MCP URL**: `https://api.pixellab.ai/mcp`
 - **PixelLab API Key**: stored only in the local `.env` file as `PIXELLAB_API_KEY`; never commit this file.
-- **Godot Binary**: `/opt/homebrew/bin/godot` (Godot Engine v4.7.2.stable.official)
-- **Node.js**: `/Users/henriquerochserrano/.nvm/versions/node/v26.5.0/bin/node`
-- **pnpm**: `/Users/henriquerochserrano/.nvm/versions/node/v26.5.0/bin/pnpm`
-- **Docker**: `/usr/local/bin/docker` (Running, Docker 28.5.1)
+- **Godot**: version 4.7.2 with matching Web export templates.
+- **Node.js**: version 22 or later; CI uses version 22.
+- **pnpm**: version 10 or later; CI uses version 10.6.2.
+- **Docker**: Docker Engine with Docker Compose v2.
+- **API secret**: set a unique `JWT_SECRET` with at least 32 characters in the local `.env` file.

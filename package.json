@@ -2,7 +2,7 @@
   "name": "spacetoby",
   "version": "1.0.0",
   "private": true,
-  "description": "SpaceToby — 2D Space Arcade Game Monorepo (Godot 4.x + NestJS + Prisma + PostgreSQL + Supabase)",
+  "description": "SpaceToby — 2D Space Arcade Game Monorepo (Godot 4.x + NestJS + Prisma + PostgreSQL )",
   "scripts": {
     "dev": "pnpm --filter @spacetoby/api start:dev",
     "build": "pnpm -r build",
@@ -26,7 +26,6 @@
     "nestjs",
     "prisma",
     "postgresql",
-    "supabase",
     "pixellab",
     "arcade",
     "spacetoby"

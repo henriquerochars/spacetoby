@@ -338,15 +338,10 @@ func _on_enemy_destroyed(_enemy_type: String, world_pos: Vector2) -> void:
 
 
 func _spawn_explosion_fx(world_pos: Vector2) -> void:
-	var fx := Sprite2D.new()
-	fx.texture = load("res://assets/effects/explosion_burst.png")
+	var fx := Node2D.new()
+	fx.set_script(load("res://scripts/entities/explosion_effect.gd"))
 	fx.position = world_pos
-	fx.scale = Vector2(0.4, 0.4)
 	world_layer.add_child(fx)
-	var tw := create_tween()
-	tw.tween_property(fx, "scale", Vector2(1.35, 1.35), 0.22)
-	tw.parallel().tween_property(fx, "modulate:a", 0.0, 0.25)
-	tw.tween_callback(fx.queue_free)
 
 
 func _on_cockpit_expression_changed(expr: String) -> void:

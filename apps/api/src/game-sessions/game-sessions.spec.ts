@@ -22,6 +22,7 @@ describe('SpaceToby Backend Services Unit Suite', () => {
   beforeAll(async () => {
     process.env.SKIP_DB_CONNECT = 'true';
     process.env.NODE_ENV = 'test';
+    process.env.JWT_SECRET = 'test-only-jwt-secret-at-least-32-characters';
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,8 +47,8 @@ describe('SpaceToby Backend Services Unit Suite', () => {
   });
 
   describe('JWT & Player Profile Synchronization', () => {
-    it('validates issued Supabase JWT and extracts user payload', async () => {
-      const token = authService.issueLocalSupabaseToken({
+    it('validates issued app JWT and extracts user payload', async () => {
+      const token = authService.issueToken({
         authUserId: 'user-toby-001',
         email: 'toby@space.dev',
         nickname: 'TobyMaster',

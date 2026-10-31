@@ -103,6 +103,9 @@ func _test_player_movement_and_shooting() -> void:
 	# Upward thrust applies upward impulse
 	ship.apply_upward_thrust()
 	assert_true(ship.velocity.y < 0.0, "Upward thrust sets negative vertical velocity")
+	var velocity_after_tap := ship.velocity.y
+	ship._physics_process(0.01)
+	assert_true(absf(ship.velocity.y - (velocity_after_tap + ship.gravity_accel * 0.01)) < 0.001, "Thruster visual decay does not extend thrust after release")
 
 	# Laser firing and cooldown
 	var fired_positions: Array[Vector2] = []

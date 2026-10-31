@@ -42,21 +42,31 @@ jobs:
         env:
           SKIP_DB_CONNECT: "true"
           NODE_ENV: "test"
+          JWT_SECRET: "spacetoby-ci-only-secret-do-not-use-outside-tests"
 
       - name: Run E2E Workflow Tests
         run: pnpm test:e2e
         env:
           SKIP_DB_CONNECT: "true"
           NODE_ENV: "test"
+          JWT_SECRET: "spacetoby-ci-only-secret-do-not-use-outside-tests"
 
   godot-validation:
-    name: Godot 4 Headless Import & Automated Gameplay Tests
+    name: Godot 4.7.2 Import, Gameplay Tests & Native Web Export
     runs-on: ubuntu-latest
-    container:
-      image: barichello/godot-ci:4.3
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Godot 4.7.2 and Web Export Templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: true
+
       - name: Validate Project Import & Run Headless Tests
         run: ./scripts/test-game.sh
+
+      - name: Validate Native WebAssembly Export
+        run: ./scripts/export-web.sh

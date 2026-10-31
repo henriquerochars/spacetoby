@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-SpaceToby — Standalone Playable Browser Build Bundler (`apps/game/build/web/index.html`).
+Legacy SpaceToby standalone Canvas browser bundle builder. This is not the release
+export path; `scripts/export-web.sh` produces the native Godot HTML5/WebAssembly build.
 Embeds all PixelLab-generated PNG sprites and WAV sound effects into a self-contained,
 responsive HTML5 Canvas + WebAudio web build with the full SpaceToby experience:
 - Main Menu, Settings, Auth & Profile, Global Leaderboards (live sync with http://localhost:3000/api/v1)

@@ -1,6 +1,6 @@
 # SpaceToby 🐶🚀
 
-**SpaceToby** is a fast-paced 2D side-scrolling space arcade game built with **Godot Engine 4.x** and a **NestJS + TypeScript + Prisma + PostgreSQL + Supabase Auth** backend.
+**SpaceToby** is a fast-paced 2D side-scrolling space arcade game built with **Godot Engine 4.x** and a **NestJS + TypeScript + Prisma + local PostgreSQL** backend with local email/password accounts.
 
 Pilot a futuristic mercenary starfighter as **Toby**, a charismatic anthropomorphic beagle escaping across a dangerous asteroid sector after stealing the Quantum Crystal from the crime boss Baron Vex!
 
@@ -32,12 +32,16 @@ Pilot a futuristic mercenary starfighter as **Toby**, a charismatic anthropomorp
 spacetoby/
 ├── apps/
 │   ├── game/                  # Godot 4.x Game Client (GDScript + PixelLab Assets + Web Build)
-│   └── api/                   # NestJS + Prisma + PostgreSQL + Supabase Auth REST API
+│   └── api/                   # NestJS + Prisma + PostgreSQL REST API
 ├── packages/
 │   └── api-contracts/         # Shared TypeScript DTOs & Enums (@spacetoby/api-contracts)
 ├── infrastructure/
 │   └── docker/                # Dockerfile for API service
-├── docs/                      # Architecture, Gameplay, API, and PixelLab Asset Manifest
+├── docs/
+│   ├── api/REST_API.md        # Local auth and REST endpoints
+│   ├── gameplay/GAMEPLAY.md   # Controls, combat, and difficulty tuning
+│   ├── architecture/          # System overview
+│   └── assets/                # PixelLab asset manifest
 ├── scripts/                   # PixelLab MCP generator, Audio generator, Headless tests, Web export
 ├── .github/workflows/ci.yml   # GitHub Actions CI workflow
 ├── docker-compose.yml         # Local PostgreSQL & API orchestration
@@ -46,6 +50,8 @@ spacetoby/
 ├── .env.example
 └── AGENTS.md
 ```
+
+Detailed guides: [REST API](docs/api/REST_API.md), [Gameplay & Tuning](docs/gameplay/GAMEPLAY.md), [Architecture](docs/architecture/OVERVIEW.md), and [Asset Manifest](docs/assets/ASSET_MANIFEST.md).
 
 ---
 
@@ -57,7 +63,7 @@ spacetoby/
 cp .env.example .env
 ```
 
-All required variables (`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `PIXELLAB_API_KEY`, anti-cheat bounds) are documented in [`.env.example`](file:///Users/henriquerochserrano/tobyspace/.env.example).
+Set a unique `JWT_SECRET` of at least 32 characters in `.env` before starting the API. `docker compose up -d` starts PostgreSQL and the API; the API applies versioned Prisma migrations at startup. Host ports bind to loopback for local development. Password recovery returns HTTP 501 until a real delivery/reset mechanism is configured; the API does not claim to send email.
 
 ### 2. Install Dependencies & Build Backend
 
@@ -72,11 +78,12 @@ pnpm build
 **With Docker Compose (PostgreSQL + API):**
 ```bash
 pnpm infra:up
-pnpm db:migrate
 ```
 
-**Or run the NestJS API directly in development mode (automatically uses PostgreSQL when available or the embedded store fallback):**
+**Or start only PostgreSQL and run the NestJS API directly:**
 ```bash
+docker compose up -d postgres
+pnpm db:migrate
 pnpm dev
 ```
 - **API Base URL**: `http://localhost:3000`

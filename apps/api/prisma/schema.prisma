@@ -1,5 +1,5 @@
 // =============================================================================
-// SpaceToby — Prisma Schema (PostgreSQL / Supabase)
+// SpaceToby — Prisma Schema (local PostgreSQL)
 // Normalized schema with indexed leaderboard queries and session validation.
 // =============================================================================
 
@@ -10,7 +10,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 enum RunStatus {
@@ -35,6 +34,16 @@ model Player {
 
   @@index([nickname])
   @@map("players")
+}
+
+model Account {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique @db.VarChar(320)
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("accounts")
 }
 
 model GameSession {

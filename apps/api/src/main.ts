@@ -29,7 +29,7 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('SpaceToby Arcade API')
     .setDescription(
-      'REST API for SpaceToby — Player Profiles, Supabase Auth Verification, Anti-Cheat Game Sessions & Global Leaderboards',
+      'REST API for SpaceToby — Local Authentication, Player Profiles, Anti-Cheat Game Sessions & Global Leaderboards',
     )
     .setVersion('1.0.0')
     .addBearerAuth()

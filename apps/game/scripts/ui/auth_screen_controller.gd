@@ -1,6 +1,6 @@
 extends Control
 ## SpaceToby Authentication Screen (`AuthScreen.tscn`).
-## Supports Sign Up, Login, Password Recovery, and Public Nickname setup via Supabase/NestJS API.
+## Supports local account sign up, login, password recovery status, and public nickname setup via the NestJS API.
 
 var email_input: LineEdit
 var password_input: LineEdit

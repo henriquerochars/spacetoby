@@ -106,7 +106,7 @@ func _refresh_stats_text() -> void:
 		"PERSONAL BEST DISTANCE:   %d m         (Global Rank: %s)"
 	) % [
 		GameState.player_nickname,
-		"Authenticated (Supabase)" if GameState.is_authenticated else "Local Guest",
+		"Authenticated Account" if GameState.is_authenticated else "Local Guest",
 		GameState.total_games_played,
 		GameState.best_kills,
 		k_rank,

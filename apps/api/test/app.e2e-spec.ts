@@ -13,6 +13,7 @@ describe('SpaceToby E2E Workflow Verification (e2e)', () => {
   beforeAll(async () => {
     process.env.SKIP_DB_CONNECT = 'true';
     process.env.NODE_ENV = 'test';
+    process.env.JWT_SECRET = 'test-only-jwt-secret-at-least-32-characters';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -36,6 +37,37 @@ describe('SpaceToby E2E Workflow Verification (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  it('registers normalized email accounts, rejects duplicates and wrong passwords, and logs in valid accounts', async () => {
+    const signup = await request(app.getHttpServer()).post('/api/v1/auth/signup').send({
+      email: '  Local.User@SpaceToby.io ', password: 'StrongPass123!', nickname: 'LocalPilot',
+    }).expect(201);
+    expect(signup.body.data.user.email).toBe('local.user@spacetoby.io');
+    expect(signup.body.data.accessToken).toBeDefined();
+    const storedAccount = await repo.findAccountByEmail('local.user@spacetoby.io');
+    expect(storedAccount?.passwordHash).toMatch(/^scrypt\$/);
+    expect(storedAccount?.passwordHash).not.toBe('StrongPass123!');
+
+    await request(app.getHttpServer()).post('/api/v1/auth/signup').send({
+      email: 'LOCAL.USER@SPACETOBY.IO', password: 'AnotherStrong123!',
+    }).expect(409);
+    await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'local.user@spacetoby.io', password: 'WrongPassword123!',
+    }).expect(401);
+
+    const login = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'LOCAL.USER@SPACETOBY.IO', password: 'StrongPass123!',
+    }).expect(200);
+    expect(login.body.data.user.id).toBe(signup.body.data.user.id);
+  });
+
+  it('rejects invalid tokens and truthfully reports that password recovery is not configured', async () => {
+    await request(app.getHttpServer()).get('/api/v1/players/me')
+      .set('Authorization', 'Bearer invalid.token.value').expect(401);
+    const response = await request(app.getHttpServer()).post('/api/v1/auth/recover')
+      .send({ email: 'nobody@spacetoby.io' }).expect(501);
+    expect(response.body.error.message).toContain('not configured');
   });
 
   it('Completes the full 10-step E2E workflow: Register -> Login -> Start Run -> Play/Kill -> Die/Submit -> Leaderboards -> Restart -> Verify Persistence', async () => {
