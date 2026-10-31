@@ -1,137 +1,126 @@
-# SpaceToby 🐶🚀
+# SpaceToby
 
-**SpaceToby** is a fast-paced 2D side-scrolling space arcade game built with **Godot Engine 4.x** and a **NestJS + TypeScript + Prisma + local PostgreSQL** backend with local email/password accounts.
+<p align="center">
+  <img src="apps/game/assets/ui/spacetoby_logo.png" alt="SpaceToby" width="480" />
+</p>
 
-Pilot a futuristic mercenary starfighter as **Toby**, a charismatic anthropomorphic beagle escaping across a dangerous asteroid sector after stealing the Quantum Crystal from the crime boss Baron Vex!
+<p align="center">
+  A pixel-art space arcade game about Toby, a beagle mercenary escaping with the Quantum Crystal.
+</p>
 
----
+<p align="center">
+  <a href="https://github.com/henriquerochars/spacetoby/actions/workflows/ci.yml"><img src="https://github.com/henriquerochars/spacetoby/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" /></a>
+  <img src="https://img.shields.io/badge/Godot-4.7.2-478cbf?logo=godot-engine" alt="Godot 4.7.2" />
+  <img src="https://img.shields.io/badge/TypeScript-NestJS-3178c6?logo=typescript" alt="NestJS and TypeScript" />
+</p>
 
-## ✨ Features Implemented
+## Gameplay
 
-- **Opening Heist Cutscene (`scenes/Cutscene.tscn`)**: Cinematic pixel-art prologue where Toby flees Baron Vex's syndicate vault, curses out Vex over the holographic comms, and blasts into the asteroid belt.
-- **Flappy Bird-Inspired Space Combat (`scenes/Gameplay.tscn`)**:
-  - Smooth gravity, upward thrust impulse, hold-boost, and pitch rotation.
-  - Forward-firing neon-cyan laser weapon with cooldown, impact SFX, and off-screen cleanup.
-  - **Three Enemy Archetypes**: **Scout** (2 HP, fast interceptor), **Fighter** (4 HP, plasma shooter), and **Heavy Ship** (8 HP, armored dreadnought).
-  - **Procedural Obstacles & Safe Corridors**: Space station pillar gates and rotating crystal asteroids with guaranteed passable gaps.
-  - **Dynamic `DifficultyManager`**: Scales scroll speed, spawn rates, enemy weights, and fire rates smoothly over distance.
-  - **Desktop & Mobile Multitouch Controls**: Simultaneous movement (left screen / Spacebar) and laser shooting (right screen / J).
-- **PixelLab MCP Original Art (`apps/game/assets/`)**:
-  - All character portraits (Toby happy, determined, cursing, surprised, game-over, plus Baron Vex), player spaceship frames with visible cockpit, enemies, projectiles, explosions, planet, cutscene art, and logo generated via the **PixelLab MCP** (`https://api.pixellab.ai/mcp`).
-- **Online Authentication, Anti-Cheat Sessions & Dual Global Leaderboards (`apps/api/`)**:
-  - **Ranking A (`GET /api/v1/leaderboards/kills`)**: Most Enemies Destroyed in a single run.
-  - **Ranking B (`GET /api/v1/leaderboards/distance`)**: Longest Distance traveled in a single run.
-  - Server-issued `GameSession` tracking with anti-cheat plausibility checks (duplicate submission lock, ownership verification, speed & kill-rate bounds).
-  - Full offline fallback so the game is 100% playable even without a running backend.
+<p align="center">
+  <img src="docs/assets/gameplay-combat.gif" alt="Toby fires lasers while enemy ships and space-station gates scroll in." width="640" />
+</p>
 
----
+<p align="center">
+  <img src="docs/assets/gameplay-obstacles.gif" alt="Gameplay showing laser combat, enemy ships, and passable obstacle corridors." width="640" />
+</p>
 
-## 📁 Monorepo Structure
+## The game
 
-```text
-spacetoby/
-├── apps/
-│   ├── game/                  # Godot 4.x Game Client (GDScript + PixelLab Assets + Web Build)
-│   └── api/                   # NestJS + Prisma + PostgreSQL REST API
-├── packages/
-│   └── api-contracts/         # Shared TypeScript DTOs & Enums (@spacetoby/api-contracts)
-├── infrastructure/
-│   └── docker/                # Dockerfile for API service
-├── docs/
-│   ├── api/REST_API.md        # Local auth and REST endpoints
-│   ├── gameplay/GAMEPLAY.md   # Controls, combat, and difficulty tuning
-│   ├── architecture/          # System overview
-│   └── assets/                # PixelLab asset manifest
-├── scripts/                   # PixelLab MCP generator, Audio generator, Headless tests, Web export
-├── .github/workflows/ci.yml   # GitHub Actions CI workflow
-├── docker-compose.yml         # Local PostgreSQL & API orchestration
-├── pnpm-workspace.yaml
-├── package.json
-├── .env.example
-└── AGENTS.md
-```
+Pilot Toby through a dangerous asteroid sector after he steals the Quantum Crystal from crime boss Baron Vex. Thrust through procedural obstacles, shoot down enemy ships, and push your best distance and kill count higher with every run.
 
-Detailed guides: [REST API](docs/api/REST_API.md), [Gameplay & Tuning](docs/gameplay/GAMEPLAY.md), [Architecture](docs/architecture/OVERVIEW.md), and [Asset Manifest](docs/assets/ASSET_MANIFEST.md).
+### Highlights
 
----
+- Flappy-inspired flight with gravity, thrust, pitch animation, and responsive keyboard, mouse, and multitouch controls.
+- Three enemy classes—Scout, Fighter, and Heavy—with distinct durability, movement, and attacks.
+- Procedural station gates and asteroids with reachable corridors, plus difficulty that scales with distance.
+- Original pixel art, an opening heist cutscene, chiptune music, and animated thruster and explosion effects.
+- Optional online profiles, server-issued game sessions, anti-cheat validation, and separate kills and distance leaderboards.
+- Playable offline as a guest; account features require the local API and PostgreSQL.
 
-## 🚀 Quick Start & Commands
+## Quick start
 
-### 1. Environment Configuration
+### Requirements
+
+- Godot **4.7.2**; install the matching Web export templates to create browser builds.
+- Node.js **22+** and pnpm **10+**.
+- Docker Engine with Docker Compose v2 for local PostgreSQL and the API.
+
+### Run locally
 
 ```bash
-cp .env.example .env
-```
-
-Set a unique `JWT_SECRET` of at least 32 characters in `.env` before starting the API. `docker compose up -d` starts PostgreSQL and the API; the API applies versioned Prisma migrations at startup. Host ports bind to loopback for local development. Password recovery returns HTTP 501 until a real delivery/reset mechanism is configured; the API does not claim to send email.
-
-### 2. Install Dependencies & Build Backend
-
-```bash
+git clone https://github.com/henriquerochars/spacetoby.git
+cd spacetoby
 pnpm install
 pnpm db:generate
-pnpm build
+cp .env.example .env
+export JWT_SECRET="$(openssl rand -hex 32)"
+docker compose up -d
 ```
 
-### 3. Start Local Infrastructure & Backend API
+Compose starts PostgreSQL and the API, applies the Prisma migrations, and binds host ports to loopback. To run the API directly instead, start only the database and apply migrations first:
 
-**With Docker Compose (PostgreSQL + API):**
-```bash
-pnpm infra:up
-```
-
-**Or start only PostgreSQL and run the NestJS API directly:**
 ```bash
 docker compose up -d postgres
 pnpm db:migrate
 pnpm dev
 ```
-- **API Base URL**: `http://localhost:3000`
-- **Health Check**: `http://localhost:3000/health`
-- **Swagger OpenAPI Docs**: `http://localhost:3000/api/docs`
 
-### 4. Open & Play the Game
+In another terminal, launch the game:
 
-**In Godot Engine 4.x:**
 ```bash
-# Run the game directly
 pnpm game:run
-
-# Or open inside the Godot 4 Editor
-pnpm game:open
 ```
 
-**In Any Web Browser (Exported Web Build):**
+The API health check is at `http://localhost:3000/health`; Swagger is at `http://localhost:3000/api/docs`.
+
+### Browser build
+
 ```bash
 pnpm game:export:web
 npx serve apps/game/build/web
 ```
 
----
+The export script requires Godot 4.7.2 and creates native HTML, JavaScript, WebAssembly, and PCK artifacts in `apps/game/build/web/`.
 
-## 🧪 Running Automated Tests
+## Controls
+
+| Action | Desktop | Mobile |
+| --- | --- | --- |
+| Thrust | `Space`, `W`, `Up`, or left click | Tap/hold the left side |
+| Fire | `J`, `Z`, `K`, or right click | Tap/hold the right side |
+| Pause | `Esc` or `P` | Pause button |
+| Advance cutscene | `Space` or click | Tap the screen |
+
+## Local accounts and API
+
+Email/password accounts and player profiles are stored in PostgreSQL. Passwords use salted scrypt hashes; the API issues signed JWTs using `JWT_SECRET`. Set a unique secret of at least 32 characters in `.env` before running the API. The Compose API and database ports are exposed only on `127.0.0.1` for local development.
+
+Password recovery is **not configured** yet: `POST /api/v1/auth/recover` returns HTTP 501 and does not send email. See the [REST API guide](docs/api/REST_API.md) for routes and behavior.
+
+## Validation
 
 ```bash
-# 1. Run Backend Unit Tests (JWT Auth, Player Sync, Session Anti-Cheat, Leaderboard Ranking)
-pnpm test
-
-# 2. Run Backend End-to-End Integration Tests (Full 10-step player & leaderboard workflow)
-pnpm test:e2e
-
-# 3. Run Godot 4 Headless Project Import & 64-Assertion Automated Game Test Suite
-pnpm test:game
-
-# 4. Run Lint / Typecheck across all packages
 pnpm lint
+pnpm build
+pnpm test
+pnpm test:e2e
+./scripts/test-game.sh
+pnpm game:export:web
 ```
 
----
+The headless Godot suite checks gameplay systems, required assets, and all seven screens. CI runs the backend checks, imports the Godot project, runs the gameplay suite, and verifies the native WebAssembly export.
 
-## 🎮 Controls
+## Project layout
 
-| Action | Desktop (Keyboard / Mouse) | Mobile / Touchscreen |
-|---|---|---|
-| **Upward Thrust** | `SPACE` / `W` / `UP` / Left Click (left half) | Tap / Hold **Left Side** of screen |
-| **Shoot Lasers** | `J` / `Z` / `K` / Right Click (or Left Click right half) | Tap / Hold **Right Side** of screen |
-| **Pause Game** | `ESC` / `P` | Tap **II PAUSE** button (top-right) |
-| **Advance Cutscene** | `SPACE` / Left Click | Tap screen |
+```text
+apps/game/       Godot client, scenes, scripts, art, audio, and tests
+apps/api/        NestJS API, Prisma schema, migrations, and tests
+packages/        Shared TypeScript API contracts
+docs/api/        REST API reference
+docs/gameplay/   Controls and gameplay tuning
+docs/architecture/ System overview
+docs/assets/     Pixel-art manifest and gameplay GIFs
+scripts/         Asset generation, game tests, and native web export
+```
+
+More detail: [Gameplay & Tuning](docs/gameplay/GAMEPLAY.md) · [REST API](docs/api/REST_API.md) · [Architecture](docs/architecture/OVERVIEW.md) · [Asset Manifest](docs/assets/ASSET_MANIFEST.md).
