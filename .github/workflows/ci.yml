@@ -31,6 +31,9 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm db:generate
 
+      - name: Build Shared API Contracts
+        run: pnpm --filter @spacetoby/api-contracts build
+
       - name: Lint Workspace
         run: pnpm lint
 
