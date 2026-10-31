@@ -22,7 +22,7 @@ spacetoby/
 │   │
 │   └── api/                   # NestJS + TypeScript + Prisma + PostgreSQL Backend API
 │       ├── src/
-│       │   ├── auth/          # Supabase JWT / JWKS verification & Auth endpoints
+│       │   ├── auth/          # Local email/password accounts & signed app JWTs
 │       │   ├── players/       # Player profiles, nickname validation, personal stats
 │       │   ├── game-sessions/ # Server-issued session IDs & anti-cheat plausibility checks
 │       │   ├── leaderboards/  # Global Kills & Distance leaderboards with pagination & tie-breaking
@@ -59,7 +59,7 @@ spacetoby/
 - **Rule**: Never hardcode backend secrets in GDScript. Always communicate with the backend through `ApiClient` (`res://scripts/autoload/api_client.gd`) and keep gameplay playable offline when the API is unreachable.
 
 ### Backend Agent (`apps/api/`, `packages/api-contracts/`)
-- Owns NestJS controllers, services, guards, Prisma schema/migrations, Supabase JWT/JWKS token verification, session anti-cheat validation, and global leaderboard ranking queries.
+- Owns NestJS controllers, services, guards, Prisma schema/migrations, local password authentication and app JWT verification, session anti-cheat validation, and global leaderboard ranking queries.
 - **Rule**: Never allow the client to write directly to leaderboard records. Every score submission must reference a server-issued `GameSession` in `IN_PROGRESS` state owned by the authenticated player.
 
 ### Art Agent (`apps/game/assets/`, `scripts/generate_pixellab_assets.py`, `docs/assets/`)
@@ -93,7 +93,7 @@ pnpm test
 # Run End-to-End Integration Tests (Full 10-step player & leaderboard lifecycle)
 pnpm test:e2e
 
-# Run Godot 4 Headless Import & 64-assertion Automated Game Test Suite
+# Run Godot 4 Headless Import & 65-assertion Automated Game Test Suite
 pnpm test:game
 
 # Export Playable Browser Build (apps/game/build/web/index.html)

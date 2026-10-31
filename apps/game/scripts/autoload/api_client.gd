@@ -1,5 +1,5 @@
 extends Node
-## REST API & Supabase Auth Client (`ApiClient`) for SpaceToby.
+## REST API & local account client (`ApiClient`) for SpaceToby.
 ## Communicates with the NestJS backend (`/api/v1/*`) for authentication,
 ## player profiles, server-issued game sessions, score submissions, and global leaderboards.
 ## Gracefully falls back to local/offline persistence when the backend is unreachable.
@@ -116,9 +116,11 @@ func login(email: String, password: String) -> void:
 func recover_password(email: String) -> void:
 	_request_json("/api/v1/auth/recover", HTTPClient.METHOD_POST, {"email": email.strip_edges()}, func(ok: bool, _code: int, res: Dictionary) -> void:
 		if ok:
-			auth_completed.emit(true, "Recovery instructions sent to " + email)
+			auth_completed.emit(true, "Recovery request received for " + email)
+		elif _code == 0:
+			auth_completed.emit(false, "Password recovery is unavailable while the game service is offline.")
 		else:
-			auth_completed.emit(true, "If " + email + " is registered, a recovery link has been dispatched.")
+			auth_completed.emit(false, _extract_error(res, "Password recovery is not configured. Contact the service operator to reset this account."))
 	)
 
 

@@ -5,8 +5,10 @@
 SpaceToby separates concerns cleanly across three layers in a `pnpm` + Godot 4 monorepo:
 
 1. **Game Client (`apps/game`)**: Godot 4.x 2D side-scrolling arcade game with four global Autoload singletons (`GameState`, `DifficultyManager`, `ApiClient`, `AudioManager`), modular entity classes (`PlayerShip`, `Projectile`, `EnemyShip`, `SpaceObstacle`, `Spawner`), and 7 full UI/Gameplay scenes (`MainMenu`, `Cutscene`, `Gameplay`, `AuthScreen`, `GameOverScreen`, `LeaderboardsScreen`, `ProfileScreen`).
-2. **REST API (`apps/api`)**: NestJS + TypeScript service exposing versioned endpoints (`/api/v1/*`) with Swagger docs (`/api/docs`), rate limiting (`@nestjs/throttler`), DTO validation (`class-validator`), Supabase JWT/JWKS verification, server-issued session tracking, anti-cheat plausibility checks, and global leaderboard calculation.
-3. **Database (`apps/api/prisma`)**: PostgreSQL schema managed by Prisma ORM (`Player`, `GameSession`, `GameEvent`) with composite leaderboard indexes, SQL views (`leaderboard_kills_view`, `leaderboard_distance_view`), and Supabase Row Level Security (RLS) policies.
+2. **REST API (`apps/api`)**: NestJS + TypeScript service exposing versioned endpoints (`/api/v1/*`) with Swagger docs (`/api/docs`), rate limiting (`@nestjs/throttler`), DTO validation (`class-validator`), local email/password authentication with signed application JWTs, server-issued session tracking, anti-cheat plausibility checks, and global leaderboard calculation.
+3. **Database (`apps/api/prisma`)**: PostgreSQL schema managed by Prisma ORM (`Player`, `GameSession`, `GameEvent`, and local account credentials) with composite leaderboard indexes and SQL views (`leaderboard_kills_view`, `leaderboard_distance_view`).
+
+Accounts are stored in the application's PostgreSQL database. The API hashes passwords and issues its own signed JWTs, and the game authenticates directly against this service. Password recovery is currently unavailable: the recovery endpoint returns HTTP 501 until a delivery and reset mechanism is configured, sends no email, and directs players to contact the service operator for an account reset.
 
 ---
 

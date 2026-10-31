@@ -1,6 +1,7 @@
 import {
   Injectable,
   Logger,
+  ServiceUnavailableException,
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
@@ -16,6 +17,12 @@ export interface StoredPlayer {
   nickname: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface StoredAccount {
+  id: string;
+  email: string;
+  passwordHash: string;
 }
 
 export interface StoredGameSession {
@@ -45,6 +52,7 @@ export interface StoredGameEvent {
 export class DataRepositoryService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DataRepositoryService.name);
   private players = new Map<string, StoredPlayer>();
+  private accounts = new Map<string, StoredAccount>();
   private sessions = new Map<string, StoredGameSession>();
   private events: StoredGameEvent[] = [];
   private snapshotFile: string;
@@ -70,12 +78,14 @@ export class DataRepositoryService implements OnModuleInit, OnModuleDestroy {
   /** Used in tests to reset state cleanly */
   async resetForTests() {
     this.players.clear();
+    this.accounts.clear();
     this.sessions.clear();
     this.events = [];
     if (this.prisma.isConnected) {
       await this.prisma.gameEvent.deleteMany();
       await this.prisma.gameSession.deleteMany();
       await this.prisma.player.deleteMany();
+      await this.prisma.account.deleteMany();
     }
   }
 
@@ -120,6 +130,29 @@ export class DataRepositoryService implements OnModuleInit, OnModuleDestroy {
   // ===========================================================================
   // Player Operations
   // ===========================================================================
+
+  async findAccountByEmail(email: string): Promise<StoredAccount | null> {
+    if (this.prisma.isConnected) {
+      return this.prisma.account.findUnique({ where: { email } });
+    }
+    if (process.env.NODE_ENV !== 'test') {
+      throw new ServiceUnavailableException('Local PostgreSQL is required for account authentication');
+    }
+    return Array.from(this.accounts.values()).find((account) => account.email === email) || null;
+  }
+
+  async createAccount(email: string, passwordHash: string): Promise<StoredAccount> {
+    if (this.prisma.isConnected) {
+      return this.prisma.account.create({ data: { email, passwordHash } });
+    }
+    if (process.env.NODE_ENV !== 'test') {
+      throw new ServiceUnavailableException('Local PostgreSQL is required for account authentication');
+    }
+    if (await this.findAccountByEmail(email)) throw new Error('Account email already exists');
+    const account = { id: randomUUID(), email, passwordHash };
+    this.accounts.set(account.id, account);
+    return account;
+  }
 
   async findPlayerByAuthUserId(authUserId: string): Promise<StoredPlayer | null> {
     if (this.prisma.isConnected) {
