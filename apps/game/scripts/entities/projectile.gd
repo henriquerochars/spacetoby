@@ -49,6 +49,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
+	# queue_free() is deferred; other overlapping targets can signal this frame.
+	if is_queued_for_deletion():
+		return
 	if is_player_projectile and area.is_in_group("enemy"):
 		if area.has_method("take_damage"):
 			area.take_damage(damage)
@@ -59,6 +62,8 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
+	if is_queued_for_deletion():
+		return
 	if not is_player_projectile and body is PlayerShip:
 		body.die()
 		queue_free()

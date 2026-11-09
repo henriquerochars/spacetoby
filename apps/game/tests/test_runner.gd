@@ -8,10 +8,36 @@ var failed_count: int = 0
 
 
 func _ready() -> void:
+	# Never overwrite the player's actual records or use their saved credentials.
+	GameState.save_path = "user://spacetoby_test_%d.cfg" % OS.get_process_id()
+	GameState.clear_auth()
+	GameState.sfx_muted = true
+	ApiClient.api_base_url = "http://127.0.0.1:1"
+	_run_suite.call_deferred()
+
+
+func _run_suite() -> void:
 	print("============================================================")
 	print("SpaceToby — Godot 4 Headless Automated Test Suite")
 	print("============================================================")
 	_run_all_tests()
+	var regressions = load("res://tests/regression_suite.gd").new()
+	add_child(regressions)
+	await regressions.run(assert_true)
+	regressions.free()
+	if not OS.get_environment("SPACETOBY_TEST_API_URL").is_empty():
+		var online = load("res://tests/online_suite.gd").new()
+		add_child(online)
+		await online.run(assert_true)
+		online.free()
+	AudioManager.stop_music()
+	AudioManager.music_player.stream = null
+	for player in AudioManager.sfx_pool:
+		player.stop()
+		player.stream = null
+	# Let the audio server release queued playbacks before shutting down headlessly.
+	await get_tree().create_timer(0.1).timeout
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(GameState.save_path))
 	print("============================================================")
 	print("RESULTS: %d Passed | %d Failed" % [passed_count, failed_count])
 	print("============================================================")

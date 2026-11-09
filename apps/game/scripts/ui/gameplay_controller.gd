@@ -32,6 +32,8 @@ var is_transitioning_to_gameover: bool = false
 
 # Multi-touch tracking (supports simultaneous left-screen thrust & right-screen shoot)
 var active_touches: Dictionary = {} # touch_index -> Vector2
+var mouse_thrust_active: bool = false
+var mouse_shoot_active: bool = false
 
 
 func _ready() -> void:
@@ -250,7 +252,27 @@ func _scroll_pair(s1: Sprite2D, s2: Sprite2D, dx: float) -> void:
 		s2.position.x = s1.position.x + 1280.0
 
 
+func _input(event: InputEvent) -> void:
+	# Releases must be observed even when a HUD button consumes the event.
+	_release_pointer(event)
+
+
+func _release_pointer(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.device == -1:
+		return # Touch-generated mouse events must not duplicate the touch controls.
+	if event is InputEventMouseButton and not event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			mouse_thrust_active = false
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			mouse_shoot_active = false
+		_refresh_touch_states()
+	elif event is InputEventScreenTouch and (not event.pressed or event.canceled):
+		active_touches.erase(event.index)
+		_refresh_touch_states()
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	_release_pointer(event)
 	if event.is_action_pressed("pause_game"):
 		_toggle_pause()
 		return
@@ -258,27 +280,25 @@ func _unhandled_input(event: InputEvent) -> void:
 	if get_tree().paused or not player or not player.is_alive:
 		return
 
-	# Desktop mouse support: Left click on left half thrusts, right half or right mouse shoots
+	# Desktop controls are independent of cursor position.
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		if mb.device == -1:
+			return
 		if mb.button_index == MOUSE_BUTTON_LEFT:
-			if mb.position.x < 640.0:
-				player.touch_thrust_active = mb.pressed
-				if mb.pressed:
-					player.apply_upward_thrust()
-			else:
-				player.touch_shoot_active = mb.pressed
-				if mb.pressed:
-					player.try_shoot()
+			mouse_thrust_active = mb.pressed
+			if mb.pressed:
+				player.apply_upward_thrust()
 		elif mb.button_index == MOUSE_BUTTON_RIGHT:
-			player.touch_shoot_active = mb.pressed
+			mouse_shoot_active = mb.pressed
 			if mb.pressed:
 				player.try_shoot()
+		_refresh_touch_states()
 
 	# Mobile Touchscreen support: simultaneous left-screen thrust & right-screen shoot
 	elif event is InputEventScreenTouch:
 		var st := event as InputEventScreenTouch
-		if st.pressed:
+		if st.pressed and not st.canceled:
 			active_touches[st.index] = st.position
 			if st.position.x < 640.0:
 				player.apply_upward_thrust()
@@ -290,13 +310,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	elif event is InputEventScreenDrag:
 		var sd := event as InputEventScreenDrag
-		active_touches[sd.index] = sd.position
+		if active_touches.has(sd.index):
+			active_touches[sd.index] = sd.position
 		_refresh_touch_states()
 
 
 func _refresh_touch_states() -> void:
-	var thrust_down := false
-	var shoot_down := false
+	var thrust_down := mouse_thrust_active
+	var shoot_down := mouse_shoot_active
 	for pos in active_touches.values():
 		if pos.x < 640.0:
 			thrust_down = true
@@ -384,8 +405,21 @@ func _toggle_pause() -> void:
 		return
 	AudioManager.play_sfx("button", 0.04)
 	get_tree().paused = not get_tree().paused
+	_clear_pointer_states()
 	if pause_panel:
 		pause_panel.visible = get_tree().paused
+
+
+func _clear_pointer_states() -> void:
+	active_touches.clear()
+	mouse_thrust_active = false
+	mouse_shoot_active = false
+	_refresh_touch_states()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_clear_pointer_states()
 
 
 func _restart_immediately() -> void:

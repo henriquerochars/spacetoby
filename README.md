@@ -110,6 +110,12 @@ pnpm game:export:web
 
 The headless Godot suite checks gameplay systems, required assets, and all seven screens. CI runs the backend checks, imports the Godot project, runs the gameplay suite, and verifies the native WebAssembly export.
 
+The game suite also exercises real screen transitions, collision physics, mouse/touch input, pause/restart, local saves, and delayed API responses. It uses a separate temporary save file so your pilot records and credentials are preserved.
+
+To verify the API against PostgreSQL, set `TEST_DATABASE_URL` to a **disposable database whose name ends in `_test`**, apply migrations to it, and run `pnpm test:e2e`. This mode clears the test database and fails if PostgreSQL cannot connect. Without this variable, E2E tests use the in-memory repository.
+
+To additionally exercise Godot's real HTTP client, run the API against that disposable database and invoke `SPACETOBY_TEST_API_URL=http://localhost:3000 ./scripts/test-game.sh`. This creates a unique test account and checks signup, score submission, ranking, nickname persistence, and login.
+
 ## Project layout
 
 ```text

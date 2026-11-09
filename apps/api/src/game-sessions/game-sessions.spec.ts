@@ -124,6 +124,24 @@ describe('SpaceToby Backend Services Unit Suite', () => {
       ).rejects.toThrow(ConflictException);
     });
 
+    it('accepts only one of two concurrent completions for the same session', async () => {
+      const session = await sessionsService.startSession(userA);
+      const results = await Promise.allSettled([
+        sessionsService.completeSession(userA, session.sessionId, {
+          distance: 500, enemiesKilled: 5, clientDurationMs: 5000,
+        }),
+        sessionsService.completeSession(userA, session.sessionId, {
+          distance: 900, enemiesKilled: 9, clientDurationMs: 6000,
+        }),
+      ]);
+
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      const rejected = results.find((result) => result.status === 'rejected') as PromiseRejectedResult;
+      expect(rejected.reason).toBeInstanceOf(ConflictException);
+      const stored = await repo.findSessionById(session.sessionId);
+      expect(stored?.distance).toBe(500);
+    });
+
     it('prevents a player from completing another player session', async () => {
       const session = await sessionsService.startSession(userA);
       await expect(
