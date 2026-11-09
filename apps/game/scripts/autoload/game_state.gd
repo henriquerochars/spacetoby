@@ -8,9 +8,11 @@ signal run_ended(distance: int, kills: int, is_new_best_dist: bool, is_new_best_
 signal auth_state_changed(is_authenticated: bool, nickname: String)
 
 const SAVE_PATH := "user://spacetoby_save.cfg"
+var save_path: String = SAVE_PATH
 
 # Current Run State
 var is_running: bool = false
+var run_id: int = 0
 var current_distance: float = 0.0
 var current_kills: int = 0
 var run_start_ticks_ms: int = 0
@@ -53,6 +55,8 @@ func _ready() -> void:
 
 
 func start_new_run() -> void:
+	run_id += 1
+	active_session_id = ""
 	is_running = true
 	current_distance = 0.0
 	current_kills = 0
@@ -74,11 +78,14 @@ func add_distance(delta_distance: float) -> void:
 	var curr_int := int(current_distance)
 	if curr_int != prev_int:
 		score_updated.emit(curr_int, current_kills)
-		if curr_int > 0 and curr_int % 500 == 0 and checkpoint_events.size() < 200:
+		# A frame may skip the exact integer at a milestone, especially at high speed.
+		var first_checkpoint := floori(float(prev_int) / 500.0) + 1
+		var last_checkpoint := floori(float(curr_int) / 500.0)
+		for checkpoint in range(first_checkpoint, mini(last_checkpoint + 1, first_checkpoint + maxi(0, 200 - checkpoint_events.size()))):
 			checkpoint_events.append({
 				"type": "DISTANCE_CHECKPOINT",
 				"timestampOffsetMs": Time.get_ticks_msec() - run_start_ticks_ms,
-				"value": curr_int
+				"value": checkpoint * 500
 			})
 
 
@@ -149,6 +156,8 @@ func clear_auth() -> void:
 	access_token = ""
 	is_authenticated = false
 	active_session_id = ""
+	kills_rank = 0
+	distance_rank = 0
 	save_local_data()
 	auth_state_changed.emit(false, player_nickname)
 
@@ -169,12 +178,12 @@ func save_local_data() -> void:
 	cfg.set_value("audio", "sfx_volume_db", sfx_volume_db)
 	cfg.set_value("audio", "music_muted", music_muted)
 	cfg.set_value("audio", "sfx_muted", sfx_muted)
-	cfg.save(SAVE_PATH)
+	cfg.save(save_path)
 
 
 func load_local_data() -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(SAVE_PATH) != OK:
+	if cfg.load(save_path) != OK:
 		return
 	best_distance = int(cfg.get_value("records", "best_distance", 0))
 	best_kills = int(cfg.get_value("records", "best_kills", 0))
@@ -183,6 +192,8 @@ func load_local_data() -> void:
 	distance_rank = int(cfg.get_value("records", "distance_rank", 0))
 	has_seen_intro_cutscene = bool(cfg.get_value("story", "has_seen_intro_cutscene", false))
 	access_token = str(cfg.get_value("auth", "access_token", ""))
+	if access_token == "local-offline-token":
+		access_token = "" # Older versions saved a placeholder as if login had succeeded.
 	player_id = str(cfg.get_value("auth", "player_id", ""))
 	player_email = str(cfg.get_value("auth", "player_email", ""))
 	player_nickname = str(cfg.get_value("auth", "player_nickname", "TobyPilot"))

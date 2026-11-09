@@ -5,13 +5,22 @@ import { AppModule } from '../src/app.module';
 import { ApiResponseInterceptor } from '../src/common/interceptors/api-response.interceptor';
 import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter';
 import { DataRepositoryService } from '../src/common/repository/data-repository.service';
+import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('SpaceToby E2E Workflow Verification (e2e)', () => {
   let app: INestApplication;
   let repo: DataRepositoryService;
 
   beforeAll(async () => {
-    process.env.SKIP_DB_CONNECT = 'true';
+    const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+    if (testDatabaseUrl) {
+      // resetForTests clears every table: only opt in with a disposable test DB.
+      if (!new URL(testDatabaseUrl).pathname.endsWith('_test')) {
+        throw new Error('TEST_DATABASE_URL must name a disposable database ending in _test');
+      }
+      process.env.DATABASE_URL = testDatabaseUrl;
+    }
+    process.env.SKIP_DB_CONNECT = testDatabaseUrl ? 'false' : 'true';
     process.env.NODE_ENV = 'test';
     process.env.JWT_SECRET = 'test-only-jwt-secret-at-least-32-characters';
 
@@ -31,12 +40,15 @@ describe('SpaceToby E2E Workflow Verification (e2e)', () => {
     app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
+    if (testDatabaseUrl && !app.get(PrismaService).isConnected) {
+      throw new Error('PostgreSQL E2E tests require a working test database connection');
+    }
     repo = app.get(DataRepositoryService);
     await repo.resetForTests();
   });
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
   it('registers normalized email accounts, rejects duplicates and wrong passwords, and logs in valid accounts', async () => {
@@ -183,5 +195,29 @@ describe('SpaceToby E2E Workflow Verification (e2e)', () => {
     expect(statsRes.body.data.bestKills).toBe(27);
     expect(statsRes.body.data.killsRank).toBe(1);
     expect(statsRes.body.data.distanceRank).toBe(1);
+  });
+
+  it('rejects concurrent HTTP score submissions without overwriting the accepted run', async () => {
+    const signup = await request(app.getHttpServer()).post('/api/v1/auth/signup').send({
+      email: 'concurrent@spacetoby.io', password: 'StrongPass123!', nickname: 'ConcurrentPilot',
+    }).expect(201);
+    const token = signup.body.data.accessToken;
+    const started = await request(app.getHttpServer()).post('/api/v1/game-sessions')
+      .set('Authorization', `Bearer ${token}`).expect(201);
+    const sessionId = started.body.data.sessionId;
+    const results = await Promise.all([500, 900].map((distance) =>
+      request(app.getHttpServer()).post(`/api/v1/game-sessions/${sessionId}/complete`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ distance, enemiesKilled: 5, clientDurationMs: 5000,
+          events: [{ type: 'SESSION_ENDED', timestampOffsetMs: 5000, value: distance }],
+        }),
+    ));
+    expect(results.map((result) => result.status).sort()).toEqual([200, 409]);
+    const accepted = results.find((result) => result.status === 200)!;
+    expect((await repo.findSessionById(sessionId))?.distance).toBe(accepted.body.data.distance);
+    const prisma = app.get(PrismaService);
+    if (prisma.isConnected) {
+      expect(await prisma.gameEvent.count({ where: { sessionId } })).toBe(1);
+    }
   });
 });

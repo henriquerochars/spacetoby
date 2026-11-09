@@ -51,7 +51,22 @@ var skip_button: Button
 func _ready() -> void:
 	AudioManager.play_music("cutscene")
 	_build_ui()
+	_ignore_decorative_input(self)
 	_load_beat(0)
+
+
+func _ignore_decorative_input(node: Node) -> void:
+	# Let clicks on artwork reach the screen; buttons keep their own GUI actions.
+	for child in node.get_children():
+		if child is Control and not child is BaseButton:
+			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ignore_decorative_input(child)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_on_next_pressed()
+		accept_event()
 
 
 func _build_ui() -> void:

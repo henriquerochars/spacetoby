@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   Logger,
   ServiceUnavailableException,
@@ -292,7 +293,8 @@ export class DataRepositoryService implements OnModuleInit, OnModuleDestroy {
   ): Promise<StoredGameSession> {
     if (this.prisma.isConnected) {
       const updated = await this.prisma.gameSession.update({
-        where: { id },
+        // The state check must be part of the write, not only the earlier read.
+        where: { id, status: RunStatus.IN_PROGRESS },
         data: {
           finishedAt: update.finishedAt,
           durationMs: update.durationMs,
@@ -313,12 +315,20 @@ export class DataRepositoryService implements OnModuleInit, OnModuleDestroy {
               }
             : {}),
         },
+      }).catch((error: unknown) => {
+        if ((error as { code?: string }).code === 'P2025') {
+          throw new ConflictException('Game session has already been completed or closed');
+        }
+        throw error;
       });
       return this.mapPrismaSession(updated);
     }
 
     const existing = this.sessions.get(id);
     if (!existing) throw new Error('GameSession not found');
+    if (existing.status !== RunStatus.IN_PROGRESS) {
+      throw new ConflictException('Game session has already been completed or closed');
+    }
     const merged: StoredGameSession = {
       ...existing,
       ...update,

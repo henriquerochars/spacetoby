@@ -23,8 +23,8 @@ func _build_ui() -> void:
 	add_child(bg)
 
 	var panel := Panel.new()
-	panel.position = Vector2(340, 80)
-	panel.size = Vector2(600, 560)
+	panel.position = Vector2(340, 60)
+	panel.size = Vector2(600, 600)
 	add_child(panel)
 
 	var portrait := TextureRect.new()
@@ -64,14 +64,13 @@ func _build_ui() -> void:
 	panel.add_child(email_input)
 
 	var pass_lbl := Label.new()
-	pass_lbl.text = "Password (min 6 chars):"
+	pass_lbl.text = "Password (min 8 chars):"
 	pass_lbl.position = Vector2(70, 272)
 	panel.add_child(pass_lbl)
 
 	password_input = LineEdit.new()
 	password_input.secret = true
 	password_input.placeholder_text = "••••••••"
-	password_input.text = "Quantum2026!"
 	password_input.position = Vector2(70, 298)
 	password_input.size = Vector2(460, 38)
 	panel.add_child(password_input)
@@ -122,7 +121,8 @@ func _build_ui() -> void:
 	status_label = Label.new()
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status_label.position = Vector2(40, 532)
-	status_label.size = Vector2(520, 26)
+	status_label.size = Vector2(520, 58)
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
 	panel.add_child(status_label)
 

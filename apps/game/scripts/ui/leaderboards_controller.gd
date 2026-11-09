@@ -150,15 +150,16 @@ func _load_tab(metric: String, page: int) -> void:
 
 
 func _on_leaderboard_loaded(metric: String, data: Dictionary) -> void:
-	if metric != current_metric:
+	if metric != current_metric or int(data.get("page", 1)) != current_page:
 		return
 
 	for child in rows_container.get_children():
 		child.queue_free()
 
 	var entries: Array = data.get("entries", [])
+	var unavailable: bool = bool(data.get("offlineFallback", false))
 	total_pages = maxi(1, int(data.get("totalPages", 1)))
-	current_page = int(data.get("page", 1))
+	current_page = 1 if unavailable else int(data.get("page", 1))
 	page_label.text = "Page %d / %d" % [current_page, total_pages]
 	prev_btn.disabled = (current_page <= 1)
 	next_btn.disabled = (current_page >= total_pages)
@@ -166,7 +167,7 @@ func _on_leaderboard_loaded(metric: String, data: Dictionary) -> void:
 	var unit := " Kills" if metric == "kills" else " m"
 	if entries.is_empty():
 		var empty_lbl := Label.new()
-		empty_lbl.text = "No ranked runs recorded yet. Be the first pilot on the board!"
+		empty_lbl.text = "Global leaderboards unavailable. Please try again when connected." if unavailable else "No ranked runs recorded yet. Be the first pilot on the board!"
 		rows_container.add_child(empty_lbl)
 	else:
 		for e in entries:
@@ -199,7 +200,10 @@ func _on_leaderboard_loaded(metric: String, data: Dictionary) -> void:
 			rows_container.add_child(row)
 
 	var my_entry = data.get("currentPlayerEntry", null)
-	if typeof(my_entry) == TYPE_DICTIONARY and my_entry != null:
+	if unavailable:
+		var local_best := GameState.best_kills if metric == "kills" else GameState.best_distance
+		my_rank_label.text = "LOCAL PERSONAL BEST: %d%s — Global ranking unavailable" % [local_best, unit]
+	elif typeof(my_entry) == TYPE_DICTIONARY and my_entry != null:
 		my_rank_label.text = "YOUR GLOBAL POSITION: #%d — %s (%d%s)" % [
 			int(my_entry.get("rank", 0)),
 			str(my_entry.get("nickname", GameState.player_nickname)),
